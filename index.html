@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#ffb76b" />
+  <title>人生游戏化打卡</title>
+  <style>
+    :root {
+      --bg: #fff8ef;
+      --card: rgba(255, 255, 255, 0.94);
+      --text: #3f352e;
+      --muted: #88786b;
+      --primary: #f39a4a;
+      --primary-dark: #d97b2d;
+      --gold: #f5b942;
+      --green: #70b77e;
+      --danger: #e56b6f;
+      --line: #f0dfcc;
+      --shadow: 0 10px 30px rgba(120, 80, 40, 0.10);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(255, 211, 156, 0.52), transparent 34%),
+        radial-gradient(circle at 100% 20%, rgba(255, 235, 193, 0.62), transparent 28%),
+        var(--bg);
+    }
+
+    button, input, select { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .app {
+      width: min(100%, 680px);
+      margin: 0 auto;
+      padding: 14px 14px 92px;
+    }
+
+    .hero {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 12px 0 10px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .hero-card {
+      background: linear-gradient(145deg, #ffcf91 0%, #ffad61 50%, #f89649 100%);
+      color: #fff;
+      border-radius: 26px;
+      padding: 18px;
+      box-shadow: 0 16px 35px rgba(211, 120, 44, 0.28);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      right: -45px;
+      top: -58px;
+      background: rgba(255, 255, 255, 0.17);
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: .5px;
+    }
+
+    .title-wrap p {
+      margin: 5px 0 0;
+      font-size: 13px;
+      opacity: .9;
+    }
+
+    .settings-btn {
+      border: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.22);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .today-score {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .today-score .number {
+      font-weight: 900;
+      font-size: 42px;
+      line-height: 1;
+      text-shadow: 0 2px 0 rgba(130, 70, 20, .12);
+    }
+
+    .today-score .unit { padding-bottom: 5px; font-weight: 700; }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 14px 0 7px;
+      font-size: 12px;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+
+    .progress {
+      height: 10px;
+      border-radius: 99px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .32);
+      position: relative;
+      z-index: 1;
+    }
+
+    .progress > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: #fff7d0;
+      transition: width .35s ease;
+    }
+
+    .total-card {
+      margin-top: 12px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 16px;
+      padding: 11px 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section {
+      margin-top: 16px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      border: 1px solid rgba(240, 223, 204, .72);
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 13px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .task-group {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .task-group:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+    .task-name { font-weight: 800; margin-bottom: 9px; }
+
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .task-grid.single { grid-template-columns: 1fr; }
+
+    .task-btn {
+      border: 1px solid #f2dfc9;
+      background: #fffaf4;
+      border-radius: 15px;
+      min-height: 66px;
+      padding: 10px 11px;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text);
+      position: relative;
+      overflow: hidden;
+      transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+      box-shadow: 0 5px 14px rgba(100, 70, 40, .06);
+    }
+
+    .task-btn:active { transform: scale(.97); }
+    .task-btn:hover { border-color: #f0b675; box-shadow: 0 7px 18px rgba(213, 132, 52, .12); }
+    .task-btn.selected { background: #fff0dc; border-color: #f2a65a; }
+
+    .task-btn .tier {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 5px;
+      line-height: 1.35;
+    }
+
+    .task-btn .coin {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #bd6a12;
+      font-weight: 900;
+      font-size: 15px;
+    }
+
+    .sleep-note {
+      background: #fff4e6;
+      border: 1px solid #f4d7b2;
+      color: #835a32;
+      border-radius: 14px;
+      padding: 10px 12px;
+      line-height: 1.6;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .record-empty {
+      text-align: center;
+      padding: 24px 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .record-list { display: grid; gap: 9px; }
+
+    .record-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: #fffaf5;
+      border: 1px solid #f1e1d1;
+      border-radius: 14px;
+      padding: 11px 12px;
+      animation: slideIn .25s ease;
+    }
+
+    .record-main { min-width: 0; }
+    .record-title { font-weight: 750; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .record-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .record-coin { font-weight: 900; color: #bd6a12; }
+
+    .undo-btn {
+      border: 0;
+      background: #f7e9db;
+      color: #8a6544;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .goal-list { display: grid; gap: 10px; }
+    .goal-row { background: #fffaf4; border: 1px solid #f1dfca; border-radius: 15px; padding: 11px 12px; }
+    .goal-top { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 750; }
+    .goal-top span:last-child { color: var(--muted); font-weight: 650; }
+    .mini-progress { height: 8px; background: #f2e4d5; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .mini-progress i { display: block; height: 100%; background: linear-gradient(90deg, #f7b45d, #f19042); border-radius: inherit; }
+
+    .fab {
+      position: fixed;
+      right: max(18px, calc((100vw - 680px) / 2 + 18px));
+      bottom: 18px;
+      z-index: 40;
+      border: 0;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #f6aa55, #ed8535);
+      color: white;
+      padding: 13px 17px;
+      font-weight: 800;
+      box-shadow: 0 12px 28px rgba(196, 101, 31, .30);
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 18%;
+      transform: translate(-50%, -10px) scale(.95);
+      z-index: 100;
+      background: rgba(67, 54, 43, .92);
+      color: #fff;
+      border-radius: 99px;
+      padding: 10px 16px;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s ease;
+      white-space: nowrap;
+      max-width: calc(100vw - 30px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+    .coin-fly {
+      position: fixed;
+      z-index: 110;
+      pointer-events: none;
+      font-size: 22px;
+      animation: coinFly .8s ease-out forwards;
+    }
+
+    dialog {
+      border: 0;
+      border-radius: 22px;
+      padding: 0;
+      width: min(92vw, 540px);
+      max-height: 84vh;
+      background: #fffaf5;
+      box-shadow: 0 24px 70px rgba(80, 50, 25, .3);
+    }
+
+    dialog::backdrop { background: rgba(55, 39, 25, .42); backdrop-filter: blur(3px); }
+    .dialog-body { padding: 18px; overflow: auto; max-height: 84vh; }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .dialog-head h3 { margin: 0; }
+    .icon-btn { border: 0; background: #f3e5d8; border-radius: 10px; width: 36px; height: 36px; cursor: pointer; }
+    .form-grid { display: grid; gap: 10px; }
+    label { font-size: 13px; font-weight: 700; color: #6d5b4b; }
+    input, select {
+      width: 100%;
+      border: 1px solid #e8d7c7;
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: white;
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, select:focus { border-color: #eca25d; box-shadow: 0 0 0 3px rgba(236, 162, 93, .16); }
+    .primary-btn, .secondary-btn, .danger-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary-btn { background: var(--primary); color: #fff; }
+    .secondary-btn { background: #f3e6da; color: #70533b; }
+    .danger-btn { background: #fde8e8; color: #b14c50; }
+    .dialog-actions { display: flex; gap: 9px; margin-top: 14px; }
+    .dialog-actions > * { flex: 1; }
+    .divider { height: 1px; background: #eadbcd; margin: 18px 0; }
+    .manage-list { display: grid; gap: 8px; margin-top: 10px; }
+    .manage-item { display: flex; justify-content: space-between; gap: 10px; align-items: center; background: #fff; border: 1px solid #eadacb; padding: 10px; border-radius: 12px; font-size: 13px; }
+    .small-danger { border: 0; background: #fde8e8; color: #ac4b50; border-radius: 9px; padding: 7px 9px; cursor: pointer; }
+
+    @keyframes coinFly {
+      0% { opacity: 0; transform: translateY(4px) scale(.7) rotate(-10deg); }
+      20% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-90px) scale(1.25) rotate(12deg); }
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+    .pulse { animation: pulse .28s ease; }
+
+    @media (max-width: 370px) {
+      .task-grid { grid-template-columns: 1fr; }
+      .today-score .number { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <section class="hero-card">
+        <div class="hero-top">
+          <div class="title-wrap">
+            <h1>🎮 人生游戏化打卡</h1>
+            <p id="dateText"></p>
+          </div>
+          <button class="settings-btn" id="openSettings" aria-label="设置">⚙️</button>
+        </div>
+
+        <div class="today-score">
+          <span class="number" id="todayCoins">0</span>
+          <span class="unit">今日金币</span>
+        </div>
+
+        <div id="dailyGoalArea">
+          <div class="progress-label">
+            <span id="dailyGoalLabel">今日目标：暂未设置</span>
+            <span id="dailyProgressText"></span>
+          </div>
+          <div class="progress" id="dailyProgressTrack"><i id="dailyProgressBar"></i></div>
+        </div>
+
+        <div class="total-card">
+          <div class="progress-label" style="margin:0">
+            <span>累计获得</span>
+            <span id="totalProgressText">0 金</span>
+          </div>
+        </div>
+      </section>
+    </header>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">🏆 奖励目标</h2>
+        <span class="section-sub">1 金币 = 1 元</span>
+      </div>
+      <div class="goal-list" id="goalList"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">☀️ 日常任务</h2>
+        <span class="section-sub">点击即打卡</span>
+      </div>
+      <div id="dailyTasks"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">🌙 睡前任务</h2>
+        <span class="section-sub" id="sleepCapText">今日 0 / 18 金</span>
+      </div>
+      <div class="sleep-note">睡前任务同一类只保留一个档位，切换档位会自动替换。整组每日最多获得 18 金，早洗 + 早睡彩蛋会自动触发。</div>
+      <div id="sleepTasks"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">🧾 今日记录</h2>
+        <button class="secondary-btn" id="clearToday" style="padding:8px 10px;font-size:12px">清空今日</button>
+      </div>
+      <div id="recordList"></div>
+    </section>
+  </main>
+
+  <button class="fab" id="openCustomTask">＋ 自定义任务</button>
+  <div class="toast" id="toast"></div>
+
+  <dialog id="customTaskDialog">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h3>新增自定义任务</h3>
+        <button class="icon-btn" data-close="customTaskDialog">✕</button>
+      </div>
+      <div class="form-grid">
+        <label>任务名称<input id="customTaskName" placeholder="例如：整理房间" maxlength="30"></label>
+        <label>档位说明<input id="customTaskTier" placeholder="例如：20分钟" maxlength="30"></label>
+        <label>奖励金币<input id="customTaskCoins" type="number" min="1" max="999" value="5"></label>
+      </div>
+      <div class="dialog-actions">
+        <button class="secondary-btn" data-close="customTaskDialog">取消</button>
+        <button class="primary-btn" id="saveCustomTask">保存任务</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h3>设置与管理</h3>
+        <button class="icon-btn" data-close="settingsDialog">✕</button>
+      </div>
+
+      <div class="form-grid">
+        <label>今日目标金币（可留空）<input id="dailyGoalInput" type="number" min="1" max="9999" placeholder="暂不设置"></label>
+        <label>新增奖励目标名称<input id="goalNameInput" placeholder="例如：周末旅行基金" maxlength="40"></label>
+        <label>目标金额<input id="goalAmountInput" type="number" min="1" max="999999" placeholder="500"></label>
+      </div>
+      <div class="dialog-actions">
+        <button class="primary-btn" id="saveSettings">保存今日目标</button>
+        <button class="secondary-btn" id="addGoal">添加奖励目标</button>
+      </div>
+
+      <div class="divider"></div>
+      <strong>自定义任务</strong>
+      <div class="manage-list" id="customTaskManage"></div>
+
+      <div class="divider"></div>
+      <strong>奖励目标</strong>
+      <div class="manage-list" id="goalManage"></div>
+
+      <div class="divider"></div>
+      <strong>数据备份</strong>
+      <p style="margin:8px 0 10px;color:var(--muted);font-size:13px;line-height:1.55">导出 JSON 后，可在另一台设备导入。导入会覆盖当前设备上的全部数据。</p>
+      <div class="dialog-actions" style="margin-top:0">
+        <button class="secondary-btn" id="exportData">导出 JSON</button>
+        <button class="secondary-btn" id="importData">导入 JSON</button>
+      </div>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+
+      <div class="divider"></div>
+      <button class="danger-btn" id="resetAll" style="width:100%">重置全部数据</button>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE_KEY = 'lifeGamifiedCheckin_v1';
+      const SLEEP_CAP = 18;
+
+      const DEFAULT_TASKS = [
+        { id:'exercise_self_20', group:'运动（自己练）', tier:'20分钟', coins:10 },
+        { id:'exercise_self_40', group:'运动（自己练）', tier:'40分钟', coins:20 },
+        { id:'exercise_coach_90', group:'运动（私教/跟练）', tier:'1.5小时', coins:20 },
+        { id:'read_10', group:'看书', tier:'10分钟', coins:5 },
+        { id:'read_30', group:'看书', tier:'30分钟', coins:15 },
+        { id:'study_active_15', group:'学习（主动思考/刷题）', tier:'15分钟', coins:10 },
+        { id:'study_active_30', group:'学习（主动思考/刷题）', tier:'30分钟', coins:18 },
+        { id:'study_passive_30', group:'学习（看视频被动输入）', tier:'30分钟', coins:5 },
+        { id:'study_passive_60', group:'学习（看视频被动输入）', tier:'60分钟', coins:8 },
+        { id:'long_video_1', group:'看长视频', tier:'1节', coins:3 },
+        { id:'long_video_2', group:'看长视频', tier:'2节', coins:5 },
+        { id:'cook_2', group:'烧饭', tier:'一荤一素', coins:6 },
+        { id:'cook_4', group:'烧饭', tier:'三菜一汤', coins:15 },
+        { id:'cook_fast', group:'烧饭', tier:'快手一锅出', coins:5 },
+        { id:'sewing_1', group:'缝纫衣服一件', tier:'完成1件', coins:50 },
+        { id:'puzzle_1', group:'拼图一个', tier:'完成1个', coins:30 }
+      ];
+
+      const SLEEP_TASKS = [
+        { id:'wash_22', group:'刷牙 + 洗澡', tier:'22:00前开始', coins:3, type:'wash' },
+        { id:'wash_21', group:'刷牙 + 洗澡', tier:'21:00前开始', coins:5, type:'wash', early:true },
+        { id:'sleep_23', group:'睡觉', tier:'23:00前', coins:3, type:'sleep' },
+        { id:'sleep_2230', group:'睡觉', tier:'22:30前', coins:8, type:'sleep' },
+        { id:'sleep_22', group:'睡觉', tier:'22:00前', coins:12, type:'sleep' }
+      ];
+
+      const DEFAULT_STATE = {
+        dailyGoal: null,
+        goals: [
+          { id:'goal_washer', name:'内衣洗衣烘干机', amount:800 },
+          { id:'goal_disk', name:'电脑重装换硬盘', amount:400 }
+        ],
+        customTasks: [],
+        days: {}
+      };
+
+      let state = loadState();
+      let toastTimer;
+
+      const $ = (id) => document.getElementById(id);
+      const todayKey = () => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
+
+      function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return clone(DEFAULT_STATE);
+          const parsed = JSON.parse(raw);
+          return {
+            ...clone(DEFAULT_STATE),
+            ...parsed,
+            goals: Array.isArray(parsed.goals) ? parsed.goals : clone(DEFAULT_STATE.goals),
+            customTasks: Array.isArray(parsed.customTasks) ? parsed.customTasks : [],
+            days: parsed.days && typeof parsed.days === 'object' ? parsed.days : {}
+          };
+        } catch (e) {
+          console.warn('读取本地数据失败，已使用默认数据。', e);
+          return clone(DEFAULT_STATE);
+        }
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function getDay() {
+        const key = todayKey();
+        if (!state.days[key]) {
+          state.days[key] = { records: [], sleepSelections: { wash:null, sleep:null }, sleepBonus:false };
+          saveState();
+        }
+        return state.days[key];
+      }
+
+      function totalCoins() {
+        return Object.values(state.days).reduce((sum, day) => {
+          const records = Array.isArray(day.records) ? day.records : [];
+          return sum + records.reduce((s, r) => s + Number(r.coins || 0), 0);
+        }, 0);
+      }
+
+      function todayCoins() {
+        return getDay().records.reduce((sum, r) => sum + Number(r.coins || 0), 0);
+      }
+
+      function sleepCoins() {
+        return getDay().records
+          .filter(r => r.category === 'sleep')
+          .reduce((sum, r) => sum + Number(r.coins || 0), 0);
+      }
+
+      function formatTime(ts) {
+        return new Date(ts).toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit', hour12:false });
+      }
+
+      function addRecord(record) {
+        getDay().records.unshift({
+          recordId: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          time: Date.now(),
+          ...record
+        });
+      }
+
+      function punchDaily(task, evt) {
+        addRecord({ taskId: task.id, name: task.group, tier: task.tier, coins: task.coins, category:'daily' });
+        saveState();
+        feedback(evt, task.coins, `${task.group} · ${task.tier}`);
+        render();
+      }
+
+      function punchSleep(task, evt) {
+        const day = getDay();
+        const oldId = day.sleepSelections[task.type];
+        const oldTask = SLEEP_TASKS.find(t => t.id === oldId);
+
+        if (oldId === task.id) {
+          showToast('这个档位今天已经打卡啦');
+          return;
+        }
+
+        if (oldTask) {
+          day.records = day.records.filter(r => !(r.category === 'sleep' && r.taskId === oldTask.id));
+        }
+
+        day.sleepSelections[task.type] = task.id;
+        addRecord({ taskId: task.id, name: task.group, tier: task.tier, coins: task.coins, category:'sleep' });
+        reconcileSleepBonus();
+        enforceSleepCap();
+        saveState();
+
+        const delta = task.coins - (oldTask ? oldTask.coins : 0);
+        feedback(evt, delta, oldTask ? `已切换为 ${task.tier}` : `${task.group} · ${task.tier}`);
+        render();
+      }
+
+      function reconcileSleepBonus() {
+        const day = getDay();
+        const wash = SLEEP_TASKS.find(t => t.id === day.sleepSelections.wash);
+        const sleep = SLEEP_TASKS.find(t => t.id === day.sleepSelections.sleep);
+        const shouldBonus = Boolean(wash?.early && sleep);
+        const hasBonus = day.records.some(r => r.taskId === 'sleep_combo_bonus');
+
+        if (shouldBonus && !hasBonus) {
+          addRecord({ taskId:'sleep_combo_bonus', name:'联动彩蛋', tier:'早洗 + 早睡', coins:1, category:'sleep', bonus:true });
+          day.sleepBonus = true;
+          showToast('✨ 联动彩蛋触发：额外 +1 金');
+        } else if (!shouldBonus && hasBonus) {
+          day.records = day.records.filter(r => r.taskId !== 'sleep_combo_bonus');
+          day.sleepBonus = false;
+        }
+      }
+
+      function enforceSleepCap() {
+        const day = getDay();
+        let sum = 0;
+        day.records
+          .filter(r => r.category === 'sleep')
+          .sort((a,b) => a.time - b.time)
+          .forEach(r => {
+            const allowed = Math.max(0, SLEEP_CAP - sum);
+            if (r.coins > allowed) r.coins = allowed;
+            sum += r.coins;
+          });
+      }
+
+      function undoRecord(recordId) {
+        const day = getDay();
+        const record = day.records.find(r => r.recordId === recordId);
+        if (!record) return;
+
+        day.records = day.records.filter(r => r.recordId !== recordId);
+        if (record.category === 'sleep') {
+          const task = SLEEP_TASKS.find(t => t.id === record.taskId);
+          if (task && day.sleepSelections[task.type] === task.id) day.sleepSelections[task.type] = null;
+          reconcileSleepBonus();
+          enforceSleepCap();
+        }
+        saveState();
+        showToast(`已撤销：${record.name}`);
+        render();
+      }
+
+      function feedback(evt, coins, label) {
+        showToast(`${coins >= 0 ? '+' : ''}${coins} 金币 · ${label}`);
+        if (navigator.vibrate) navigator.vibrate(35);
+        const x = evt?.clientX || window.innerWidth / 2;
+        const y = evt?.clientY || window.innerHeight / 2;
+        const coin = document.createElement('div');
+        coin.className = 'coin-fly';
+        coin.textContent = `${coins >= 0 ? '+' : ''}${coins} 🪙`;
+        coin.style.left = `${x - 25}px`;
+        coin.style.top = `${y - 12}px`;
+        document.body.appendChild(coin);
+        setTimeout(() => coin.remove(), 850);
+      }
+
+      function showToast(text) {
+        const toast = $('toast');
+        toast.textContent = text;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+      }
+
+      function groupTasks(tasks) {
+        return tasks.reduce((acc, task) => {
+          if (!acc[task.group]) acc[task.group] = [];
+          acc[task.group].push(task);
+          return acc;
+        }, {});
+      }
+
+      function renderTaskGroups(container, tasks, isSleep = false) {
+        const groups = groupTasks(tasks);
+        container.innerHTML = '';
+        Object.entries(groups).forEach(([groupName, groupTasks]) => {
+          const wrap = document.createElement('div');
+          wrap.className = 'task-group';
+          const title = document.createElement('div');
+          title.className = 'task-name';
+          title.textContent = groupName;
+          const grid = document.createElement('div');
+          grid.className = `task-grid ${groupTasks.length === 1 ? 'single' : ''}`;
+
+          groupTasks.forEach(task => {
+            const btn = document.createElement('button');
+            btn.className = 'task-btn';
+            if (isSleep) {
+              const selected = getDay().sleepSelections[task.type] === task.id;
+              if (selected) btn.classList.add('selected');
+            }
+            btn.innerHTML = `<span class="tier">${escapeHtml(task.tier)}</span><span class="coin">🪙 +${task.coins} 金</span>`;
+            btn.addEventListener('click', (evt) => isSleep ? punchSleep(task, evt) : punchDaily(task, evt));
+            grid.appendChild(btn);
+          });
+
+          wrap.append(title, grid);
+          container.appendChild(wrap);
+        });
+      }
+
+      function renderGoals() {
+        const total = totalCoins();
+        const list = $('goalList');
+        list.innerHTML = '';
+        if (!state.goals.length) {
+          list.innerHTML = '<div class="record-empty">还没有奖励目标，可在设置中添加 ✨</div>';
+          return;
+        }
+        state.goals.forEach(goal => {
+          const progress = Math.min(total, Number(goal.amount));
+          const pct = goal.amount ? Math.min(100, total / goal.amount * 100) : 0;
+          const row = document.createElement('div');
+          row.className = 'goal-row';
+          row.innerHTML = `
+            <div class="goal-top"><span>${escapeHtml(goal.name)}</span><span>${progress} / ${goal.amount} 金</span></div>
+            <div class="mini-progress"><i style="width:${pct}%"></i></div>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      function renderRecords() {
+        const records = getDay().records;
+        const list = $('recordList');
+        if (!records.length) {
+          list.innerHTML = '<div class="record-empty">今天还没有打卡，先完成一个小任务吧 ✨</div>';
+          return;
+        }
+        list.innerHTML = '<div class="record-list"></div>';
+        const box = list.firstElementChild;
+        records.forEach(record => {
+          const item = document.createElement('div');
+          item.className = 'record-item';
+          item.innerHTML = `
+            <div class="record-main">
+              <div class="record-title">${escapeHtml(record.name)} · ${escapeHtml(record.tier)}</div>
+              <div class="record-meta">${formatTime(record.time)} <span class="record-coin">+${record.coins} 金</span></div>
+            </div>
+            <button class="undo-btn">撤销</button>
+          `;
+          item.querySelector('.undo-btn').addEventListener('click', () => undoRecord(record.recordId));
+          box.appendChild(item);
+        });
+      }
+
+      function renderManageLists() {
+        const taskBox = $('customTaskManage');
+        taskBox.innerHTML = state.customTasks.length ? '' : '<div class="record-empty" style="padding:10px">暂无自定义任务</div>';
+        state.customTasks.forEach(task => {
+          const item = document.createElement('div');
+          item.className = 'manage-item';
+          item.innerHTML = `<span>${escapeHtml(task.group)} · ${escapeHtml(task.tier)}（+${task.coins}）</span><button class="small-danger">删除</button>`;
+          item.querySelector('button').onclick = () => {
+            state.customTasks = state.customTasks.filter(t => t.id !== task.id);
+            saveState(); render();
+          };
+          taskBox.appendChild(item);
+        });
+
+        const goalBox = $('goalManage');
+        goalBox.innerHTML = '';
+        state.goals.forEach(goal => {
+          const item = document.createElement('div');
+          item.className = 'manage-item';
+          item.innerHTML = `<span>${escapeHtml(goal.name)}（${goal.amount} 金）</span><button class="small-danger">删除</button>`;
+          item.querySelector('button').onclick = () => {
+            state.goals = state.goals.filter(g => g.id !== goal.id);
+            saveState(); render();
+          };
+          goalBox.appendChild(item);
+        });
+      }
+
+      function render() {
+        const now = new Date();
+        $('dateText').textContent = now.toLocaleDateString('zh-CN', { month:'long', day:'numeric', weekday:'long' });
+
+        const today = todayCoins();
+        const total = totalCoins();
+        $('todayCoins').textContent = today;
+        $('todayCoins').classList.remove('pulse');
+        requestAnimationFrame(() => $('todayCoins').classList.add('pulse'));
+
+        const hasDailyGoal = Number.isFinite(Number(state.dailyGoal)) && Number(state.dailyGoal) > 0;
+        $('dailyGoalLabel').textContent = hasDailyGoal ? `今日目标：${state.dailyGoal} 金` : '今日目标：暂未设置';
+        $('dailyProgressText').textContent = hasDailyGoal ? `${today} / ${state.dailyGoal}` : '';
+        $('dailyProgressTrack').style.display = hasDailyGoal ? '' : 'none';
+        $('dailyProgressBar').style.width = hasDailyGoal ? `${Math.min(100, today / state.dailyGoal * 100)}%` : '0%';
+        $('totalProgressText').textContent = `${total} 金`;
+        $('sleepCapText').textContent = `今日 ${sleepCoins()} / ${SLEEP_CAP} 金`;
+
+        renderGoals();
+        renderTaskGroups($('dailyTasks'), [...DEFAULT_TASKS, ...state.customTasks], false);
+        renderTaskGroups($('sleepTasks'), SLEEP_TASKS, true);
+        renderRecords();
+        renderManageLists();
+        $('dailyGoalInput').value = state.dailyGoal ?? '';
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+      }
+
+      $('openCustomTask').onclick = () => $('customTaskDialog').showModal();
+      $('openSettings').onclick = () => $('settingsDialog').showModal();
+      document.querySelectorAll('[data-close]').forEach(btn => btn.onclick = () => $(btn.dataset.close).close());
+
+      $('saveCustomTask').onclick = () => {
+        const name = $('customTaskName').value.trim();
+        const tier = $('customTaskTier').value.trim() || '完成1次';
+        const coins = Number($('customTaskCoins').value);
+        if (!name || !Number.isFinite(coins) || coins <= 0) return showToast('请填写有效的任务名称和金币');
+        state.customTasks.push({ id:`custom_${Date.now()}`, group:name, tier, coins:Math.round(coins) });
+        saveState();
+        $('customTaskName').value = '';
+        $('customTaskTier').value = '';
+        $('customTaskCoins').value = 5;
+        $('customTaskDialog').close();
+        showToast('自定义任务已添加');
+        render();
+      };
+
+      $('saveSettings').onclick = () => {
+        const raw = $('dailyGoalInput').value.trim();
+        if (!raw) {
+          state.dailyGoal = null;
+          saveState();
+          showToast('今日目标已设为暂不设置');
+          render();
+          return;
+        }
+        const goal = Number(raw);
+        if (!Number.isFinite(goal) || goal <= 0) return showToast('请输入有效的今日目标，或留空');
+        state.dailyGoal = Math.round(goal);
+        saveState();
+        showToast('今日目标已保存');
+        render();
+      };
+
+      $('addGoal').onclick = () => {
+        const name = $('goalNameInput').value.trim();
+        const amount = Number($('goalAmountInput').value);
+        if (!name || !Number.isFinite(amount) || amount <= 0) return showToast('请填写有效的目标名称和金额');
+        state.goals.push({ id:`goal_${Date.now()}`, name, amount:Math.round(amount) });
+        $('goalNameInput').value = '';
+        $('goalAmountInput').value = '';
+        saveState();
+        showToast('奖励目标已添加');
+        render();
+      };
+
+
+      function exportBackup() {
+        const payload = {
+          app: '人生游戏化打卡',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          data: state
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `人生游戏化打卡_备份_${todayKey()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('备份文件已导出');
+      }
+
+      function normalizeImportedState(input) {
+        const data = input && input.data ? input.data : input;
+        if (!data || typeof data !== 'object') throw new Error('文件内容无效');
+        if (!Array.isArray(data.goals) || !Array.isArray(data.customTasks) || !data.days || typeof data.days !== 'object') {
+          throw new Error('不是有效的打卡备份文件');
+        }
+        return {
+          dailyGoal: data.dailyGoal === null || data.dailyGoal === '' ? null : Number(data.dailyGoal),
+          goals: data.goals.filter(g => g && typeof g.name === 'string' && Number(g.amount) > 0),
+          customTasks: data.customTasks.filter(t => t && typeof t.group === 'string' && Number(t.coins) > 0),
+          days: data.days
+        };
+      }
+
+      $('exportData').onclick = exportBackup;
+      $('importData').onclick = () => $('importFile').click();
+      $('importFile').onchange = async (event) => {
+        const file = event.target.files && event.target.files[0];
+        event.target.value = '';
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const imported = normalizeImportedState(JSON.parse(text));
+          if (!confirm('导入会覆盖当前设备上的全部数据，确定继续吗？')) return;
+          state = imported;
+          saveState();
+          $('settingsDialog').close();
+          showToast('数据导入成功');
+          render();
+        } catch (error) {
+          console.error(error);
+          showToast(error.message || '导入失败，请检查文件');
+        }
+      };
+
+      $('clearToday').onclick = () => {
+        if (!confirm('确定清空今天的全部打卡记录吗？')) return;
+        state.days[todayKey()] = { records: [], sleepSelections: { wash:null, sleep:null }, sleepBonus:false };
+        saveState();
+        showToast('今日记录已清空');
+        render();
+      };
+
+      $('resetAll').onclick = () => {
+        if (!confirm('这会删除全部历史记录、自定义任务和目标，确定继续吗？')) return;
+        state = clone(DEFAULT_STATE);
+        saveState();
+        $('settingsDialog').close();
+        showToast('全部数据已重置');
+        render();
+      };
+
+      render();
+    })();
+  </script>
+</body>
+</html>
